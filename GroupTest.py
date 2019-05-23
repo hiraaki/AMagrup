@@ -1,3 +1,8 @@
 import numpy as np
+import math
 
-def
+
+
+def coesao(Object):
+
+
