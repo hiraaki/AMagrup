@@ -10,11 +10,22 @@ def ClusterIndicesNumpy(clustNum, labels_array):
     return np.where(labels_array == clustNum)[0]
 
 
-def euclidiana(origem, comparativos):
-    distancias = []
-    for comparativo in comparativos:
-        distancias.apend(math.sqrt(pow((comparativo[0]-origem[0]), 2) + pow((comparativo[1]-origem[1]), 2)))
-    return sum(distancias)
+def euclidiana(origem, fim):
+    dif = []
+    for i in range(len(origem)):
+        point = []
+        for j in range(len(origem[i])):
+            aux = pow((origem[i][j] - fim[i][j]), 2)
+            point.append(aux)
+        dif.append(math.sqrt(sum(point)))
+    return dif
+
+
+def getgrouplabel(indexies, lista):
+    lista_ = []
+    for index in indexies:
+        lista_.append((lista[index]))
+    return lista_
 
 
 data_frame = pd.read_csv("Maurício.csv")
@@ -28,7 +39,8 @@ cluster_map = pd.DataFrame()
 cluster_map['data_index'] = data_frame.index.values
 cluster_map['cluster'] = kmeans.labels_
 print(ClusterIndicesNumpy(3, kmeans.labels_))
-
+print(getgrouplabel(ClusterIndicesNumpy(3, kmeans.labels_), x))
+print(euclidiana(getgrouplabel(ClusterIndicesNumpy(3, kmeans.labels_), x), getgrouplabel(ClusterIndicesNumpy(2, kmeans.labels_), x)))
 
 #
 # print(kmeans)
