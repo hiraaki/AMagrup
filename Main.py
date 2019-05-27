@@ -15,56 +15,108 @@ ent = []
 sep = []
 csi = []
 for i in range(10):
-    kmeans = KMeans(n_clusters=17, init='random', n_init=16, max_iter=110).fit(x)
-    labels = kmeans.predict(x)
-    cluster_map = pd.DataFrame()
-    cluster_map['data_index'] = data_frame.index.values
-    cluster_map['classe'] = data_frame.classe.values
-    cluster_map['cluster'] = labels
-    grupos = gt.getgroups(17, labels, x)
+    kmeans = KMeans(n_clusters=20, init='random', n_init=20, max_iter=60).fit(x) #para coesão
+    labels = kmeans.labels_
+    grupos = gt.getgroups(20, labels, x)
     coe.append(gt.coesao(grupos))
-    ent.append(gt.entropia(cluster_map))
+
+    kmeans = KMeans(n_clusters=18, init='random', n_init=4, max_iter=80).fit(x) #para separabilidade
+    labels = kmeans.labels_
+    grupos = gt.getgroups(18, labels, x)
     sep.append(gt.separabilidade(grupos))
+
+    kmeans = KMeans(n_clusters=18, init='random', n_init=4, max_iter=80).fit(x)  # para separabilidade
+    labels = kmeans.labels_
+    grupos = gt.getgroups(18, labels, x)
     csi.append(gt.coe_Sirueta(grupos))
+
 print("Resultado Kmeans")
-print(np.mean(coe))
-print(np.mean(ent))
-print(np.mean(sep))
-print(np.mean(csi))
+print("coesão: ", np.mean(coe).__str__())
+print("entropia: 0")
+print("eparabilidade: ", (np.mean(sep)).__str__())
+print("coeficiente: ", (np.mean(csi)).__str__())
 
 coe.clear()
 ent.clear()
 sep.clear()
 csi.clear()
-while len(ent) != 10:
-    dbscan = DBSCAN(eps=101.5, min_samples=3).fit(x)
+clas = []
+throwed = []
+while len(ent) < 10:
+    throw = []
+    cla = []
+    dbscan = DBSCAN(eps=4, min_samples=2).fit(x)
     labels = dbscan.fit_predict(x)
+    while 1 > max(labels):
+        dbscan = DBSCAN(eps=6, min_samples=4).fit(x)
+        labels = dbscan.fit_predict(x)
+        print(max(labels))
+    grupos = gt.getgroups(max(labels) + 1, labels, x)
     cluster_map = pd.DataFrame()
     cluster_map['data_index'] = data_frame.index.values
     cluster_map['classe'] = data_frame.classe.values
     cluster_map['cluster'] = labels
-    if (cluster_map.query('cluster != -1').count()[0] > 1) & (max(labels) >= 1):
-        grupos = gt.getgroups(max(labels) + 1, labels, x)
-        # print(cluster_map.query('cluster != -1'))
-        # print(grupos)
-        coe.append(gt.coesao(grupos))
+    throw.append(cluster_map.query('cluster == -1').count()[0])
+    cla.append(max(labels)+1)
+    coe.append(gt.coesao(grupos))
 
-        ent.append(gt.entropia(cluster_map))
+    dbscan = DBSCAN(eps=6, min_samples=4).fit(x)
+    labels = dbscan.fit_predict(x)
+    while 1 > max(labels):
+        dbscan = DBSCAN(eps=6, min_samples=4).fit(x)
+        labels = dbscan.fit_predict(x)
+    cluster_map = pd.DataFrame()
+    cluster_map['data_index'] = data_frame.index.values
+    cluster_map['classe'] = data_frame.classe.values
+    cluster_map['cluster'] = labels
+    clas.append(max(labels) + 1)
+    throw.append(cluster_map.query('cluster == -1').count()[0])
+    ent.append(gt.entropia(cluster_map))
 
-        sep.append(gt.separabilidade(grupos))
+    dbscan = DBSCAN(eps=196, min_samples=2).fit(x)
+    labels = dbscan.fit_predict(x)
+    while 1 > max(labels):
+        dbscan = DBSCAN(eps=6, min_samples=4).fit(x)
+        labels = dbscan.fit_predict(x)
 
-        csi.append(gt.coe_Sirueta(grupos))
+    cluster_map = pd.DataFrame()
+    cluster_map['data_index'] = data_frame.index.values
+    cluster_map['classe'] = data_frame.classe.values
+    cluster_map['cluster'] = labels
+    cla.append(max(labels) + 1)
+    throw.append(cluster_map.query('cluster == -1').count()[0])
+    sep.append(gt.separabilidade(grupos))
+
+    dbscan = DBSCAN(eps=196, min_samples=2).fit(x)
+    labels = dbscan.fit_predict(x)
+    while 1 > max(labels):
+        dbscan = DBSCAN(eps=6, min_samples=4).fit(x)
+        labels = dbscan.fit_predict(x)
+    cluster_map = pd.DataFrame()
+    cluster_map['data_index'] = data_frame.index.values
+    cluster_map['classe'] = data_frame.classe.values
+    cluster_map['cluster'] = labels
+    cla.append(max(labels) + 1)
+    throw.append(cluster_map.query('cluster == -1').count()[0])
+    csi.append(gt.coe_Sirueta(grupos))
+    throwed.append(throw)
+    clas.append(cla)
+
 print("Resultado DBScan")
-print(np.mean(coe))
-print(np.mean(ent))
-print(np.mean(sep))
-print(np.mean(csi))
+print("Ruido", throwed.__str__())
+print("Qtd de Clas", clas.__str__())
+print("coesão: ", np.mean(coe).__str__())
+print("entropia: 0")
+print("eparabilidade: ", np.mean(sep).__str__())
+print("coeficiente: ", np.mean(csi).__str__())
 
 coe.clear()
 ent.clear()
 sep.clear()
 csi.clear()
+clas.clear()
 for i in range(10):
+    cla = []
     agnes = AgglomerativeClustering(linkage="complete").fit(x)
     labels = agnes.labels_
     cluster_map = pd.DataFrame()
@@ -72,12 +124,14 @@ for i in range(10):
     cluster_map['classe'] = data_frame.classe.values
     cluster_map['cluster'] = labels
     grupos = gt.getgroups(max(labels)+1, labels, x)
+    cla.append(max(labels)+1)
     coe.append(gt.coesao(grupos))
     ent.append(gt.entropia(cluster_map))
     sep.append(gt.separabilidade(grupos))
     csi.append(gt.coe_Sirueta(grupos))
 print("Resultado Agnes")
-print(np.mean(coe))
-print(np.mean(ent))
-print(np.mean(sep))
-print(np.mean(csi))
+print("Qtd de Clas", clas.__str__())
+print("coesão: ", np.mean(coe).__str__())
+print("entropia: 0")
+print("eparabilidade: ", np.mean(sep).__str__())
+print("coeficiente: ", np.mean(csi).__str__())
